@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = {
+export default {
 	seasonPatt(file) { //For instance -> S02E05
 		file = file.slice(file.lastIndexOf("/") + 1, file.length).replace(/[.]/g, " ");
 		let episode = /S\d+E\d+/gi.exec(file);

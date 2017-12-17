@@ -1,19 +1,43 @@
+const path = require("path");
+const dev = path.resolve(__dirname, "src");
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const webpack = require("webpack");
+const isProd = process.env.NODE_ENV.trim() === "production";
 
 module.exports = {
-	entry: "./index.js",
-	output: {
-		path: "./",
-		filename: "parse.js"
+	"entry": `${dev}/index.js`,
+	"output": {
+		filename: "organize.js"
 	},
-	module: {
+	"target": "node",
+	"module": {
 		rules: [
 			{
-				test: /\.js/,
+				test: /\.js$/,
 				use: "babel-loader",
 				exclude: /node_modules/
 			}
 		]
 	},
-	target: "node"
+	"plugins": isProd ? [
+		new UglifyJsPlugin({
+			uglifyOptions: {
+				mangle: true,
+				compress: {
+					sequences: true,
+					dead_code: true,
+					conditionals: true,
+					booleans: true,
+					unused: true,
+					if_return: true,
+					join_vars: true,
+					drop_console: false,
+					warnings: false
+				},
+				output: {
+					comments: false
+				}
+			}
+		})	
+	] : []
 };

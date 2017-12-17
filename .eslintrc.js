@@ -1,36 +1,35 @@
 module.exports = {
-    "env": {
-        "node": true,
-        "es6": true
-    },
-    "extends": "eslint:recommended",
-    "parser": "babel-eslint",
-    "parserOptions": {
-        "ecmaFeatures": {
-            "experimentalObjectRestSpread": true,
-        },
-        "sourceType": "module"
-    },
-    "globals": {
-        "require": true
-    },
-    "rules": {
-        "indent": [
-            "error",
-            "tab"
-        ],
-        "linebreak-style": [
+	"extends": ["eslint:recommended"],
+	"env": { "node": true },
+	"parser": "babel-eslint",
+	"parserOptions": {
+		"ecmaVersion": 8,
+		"ecmaFeatures": {
+			"experimentalObjectRestSpread": true
+		},
+		"sourceType": "module"
+	},
+	"globals": {
+		"Promise": true
+	},
+	"rules": {
+		"indent": [
+			"error",
+			"tab",
+			{"SwitchCase": 1}
+		],
+		"linebreak-style": [
 			"off",
-            "windows"
-        ],
-        "quotes": [
-            "error",
-            "double"
-        ],
-        "semi": [
-            "error",
-            "always"
-        ],
-        "no-console": 0
-    }
+			"windows"
+		],
+		"semi": [
+			"error",
+			"always"
+		],
+		"arrow-spacing": ["error", { "before": true, "after": true }],
+		"eqeqeq": ["error", "smart"],
+		"quote-props": "off",
+		"comma-dangle": ["error", "never"],
+		"no-console": 0
+	}
 };

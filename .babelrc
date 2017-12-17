@@ -1,16 +1,11 @@
 {
-	"presets": ["es2015", "stage-3"],
-	"env": {
-		"development": {
-			"plugins": [
-				["transform-runtime", {
-					"helpers": false,
-					"polyfill": false,
-					"regenerator": true,
-					"moduleName": "babel-runtime"
-				}],
-				"transform-async-to-generator"
-			]
-		}
-	}
+	"presets": [
+		["env", {
+			"targets": {
+				"node": "9.3.0",
+				"uglify": true
+			}
+		}]
+	],
+	"plugins": [["transform-runtime", { "helpers": false, "polyfill": false, "regenerator": true } ]]
 }
