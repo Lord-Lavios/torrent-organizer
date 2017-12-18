@@ -13,7 +13,7 @@ This script makes it look like this
 ### Movies
 ![Movies](./images/movie.PNG)
 
-**Note (only when the mode is `--no-link`)** - It will delete all the files that are not `.mp4, .avi, .mkv, .avi and .srt`. This is to make sure that the script deletes all the unnecessary `.txt`, `.nfo`, folders remaining after the rename and sample video files. Best to use this script on a folder which only contains movies and tv shows.
+**Note (only when the mode is `nolink`)** - It will delete all the files that are not `.mp4, .avi, .mkv, .avi and .srt`. This is to make sure that the script deletes all the unnecessary `.txt`, `.nfo`, folders remaining after the rename and sample video files. Best to use this script on a folder which only contains movies and tv shows.
 
 ## How to use
 - Install node
@@ -27,6 +27,6 @@ This script makes it look like this
 - `<mode>` Specify mode: "symlink", "hardlink", "nolink"; "hardlink" by default;
   - `symlink` - To use this, **open cmd as administrator**. It creates shortcut of the files with formatted names instead of renaming the original files. Recommended to use on torrents that are being seeded.
   - `hardlink` - To use this, **open cmd as administrator**. It creates new files with formatted names without taking extra space. If the original files are deleted, hard linked files will take the space. Basically duplicates of files without taking extra space. Recommended to use on torrents that being seeded.
-  - `no-link` - This renames the files and deletes the unnecessary files. **This will stop seeding.**
+  - `nolink` - This renames the files and deletes the unnecessary files. **This will stop seeding.**
 
 This project is not affliated with www.omdbapi.com
