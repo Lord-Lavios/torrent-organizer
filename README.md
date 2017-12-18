@@ -25,8 +25,9 @@ This script makes it look like this
 - `<path>` (required) - It is the folder where your tv shows and movies are. Make sure your path is in double quotes.
 - `<apikey>` API Key from OMDb API; Defaults to false
 - `<mode>` Specify mode: "symlink", "hardlink", "nolink"; "hardlink" by default;
-  - `symlink` - To use this, **open cmd as administrator**. It creates shortcut of the files with formatted names instead of renaming the original files. Recommended to use on torrents that are being seeded.
-  - `hardlink` - To use this, **open cmd as administrator**. It creates new files with formatted names without taking extra space. If the original files are deleted, hard linked files will take the space. Basically duplicates of files without taking extra space. Recommended to use on torrents that being seeded.
-  - `nolink` - This renames the files and deletes the unnecessary files. **This will stop seeding.**
+  - `symlink` To use this, **open cmd as administrator**. It creates shortcut of the files with formatted names instead of renaming the original files. Recommended to use on torrents that are being seeded.
+  - `hardlink` To use this, **open cmd as administrator**. It creates new files with formatted names without taking extra space. If the original files are deleted, hard linked files will take the space. Basically duplicates of files without taking extra space. Recommended to use on torrents that being seeded.
+  - `nolink` This renames the files and deletes the unnecessary files. **This will stop seeding.**
+- `--help` shows information about the options
 
 This project is not affliated with www.omdbapi.com
