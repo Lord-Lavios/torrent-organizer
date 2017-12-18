@@ -17,13 +17,16 @@ This script makes it look like this
 
 ## How to use
 - Install node
-- clone this repository
-- cd into torrent-organizer and `npm install`
-- Use `node ./parse.js path --mode`
+- Download and Extract organize.7z (Check Releases)
+- (Optional) Request key from [OMDb API](http://omdbapi.com/apikey.aspx) to organize files with titles and posters. If key is not provided, the script will organize files without titles and posters. Support OMDb API on [Patreon](https://www.patreon.com/bePatron?u=5038490).
 
-### Options
-- `path` (required) - It is the folder where your tv shows and movies are. Make sure your path is in double quotes.
-- `--mode` (required) - There are three modes `--symlink`, `--hardlink`, `--no-link`
-  - `--symlink` - To use this, **open cmd as administrator**. It creates shortcut of the files with formatted names instead of renaming the original files. Recommended to use on torrents that are being seeded.
-  - `--hardlink` - To use this, **open cmd as administrator**. It creates new files with formatted names without taking extra space. If the original files are deleted, hard linked files will take the space. Basically duplicates of files without taking extra space. Recommended to use on torrents that being seeded.
-  - `--no-link` - This renames the files and deletes the unnecessary files. **This will stop seeding.**
+### Usage
+`node organize <path> --api=<apikey|false> --mode=<mode>`
+- `<path>` (required) - It is the folder where your tv shows and movies are. Make sure your path is in double quotes.
+- `<apikey>` API Key from OMDb API; Defaults to false
+- `<mode>` Specify mode: "symlink", "hardlink", "nolink"; "hardlink" by default;
+  - `symlink` - To use this, **open cmd as administrator**. It creates shortcut of the files with formatted names instead of renaming the original files. Recommended to use on torrents that are being seeded.
+  - `hardlink` - To use this, **open cmd as administrator**. It creates new files with formatted names without taking extra space. If the original files are deleted, hard linked files will take the space. Basically duplicates of files without taking extra space. Recommended to use on torrents that being seeded.
+  - `no-link` - This renames the files and deletes the unnecessary files. **This will stop seeding.**
+
+This project is not affliated with www.omdbapi.com
