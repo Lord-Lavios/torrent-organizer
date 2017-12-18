@@ -34,9 +34,9 @@ export default async function () {
 
 	args.forEach(arg => { //Parsing the mode and the api key
 		if (/mode/.test(arg)) mode = arg;
-		if (/api/.test(arg)) arg = arg.slice(arg.indexOf("="), arg.length);
+		if (/api/.test(arg)) apiKey = arg.slice(arg.indexOf("=") + 1, arg.length);
 	});
-
+	
 	if (mode === "--mode=hardlink") { //For the hardlink
 		return { "mode": 0, path, apiKey };
 	} else if (mode === "--mode=symlink") { //For the symlink

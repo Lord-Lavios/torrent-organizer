@@ -27,12 +27,12 @@ const GetFiles = GetFilesFuncs(Helper);
 		let [showsData, posters, moviesData] = [{}, {}, {}];
 		if (args.apiKey) {
 			console.log("Getting shows and movies data from OmdbAPI.com");
-			[showsData, posters, moviesData] = await apiShowsAndMovies([shows, movies]);
+			[showsData, posters, moviesData] = await apiShowsAndMovies(shows, movies, args.apiKey);
 			shows = Helper.replaceNameWithApiName({"showsAndMovies": [shows, movies], showsData});
 		}
 		console.log("Making new folders for movies and tv shows");
 		basePath += Helper.generateRandomFolderName();
-		await makeShowAndMoviesFolders({basePath, shows, posters, "movies": moviesData.length ? moviesData : movies});
+		await makeShowAndMoviesFolders({basePath, shows, posters, movies, moviesData});
 		console.log("Finding new names for movies and tv shows");
 		let newNames = findNewNamesForFiles({shows, showsData, movies, moviesData});
 		if(args.mode === 0) {
@@ -100,25 +100,24 @@ async function whatToDoWithFile(file, basePath) {
 
 
 /* Gets shows data through OmdbAPI with their poster url's */
-function apiShowsAndMovies([shows, movies]) {
+function apiShowsAndMovies(shows, movies, apikey) {
 	try {
 		return new Promise(async resolve => {
-			let [showsData, posters] = await apiShows(shows);
-			let moviesData = await apiMovies(movies);
+			let [showsData, posters] = await apiShows(shows, apikey);
+			let moviesData = await apiMovies(movies, apikey);
 			resolve([showsData, posters, moviesData]);
 		});
 	} catch(e) { console.log("Execute API " + new Error(e)); }
 }
 
 /* Gets movies Data form api */
-async function apiMovies(movies) {
+async function apiMovies(movies, apikey) {
 	try {
 		return new Promise(async resolve => {
 			let apiData = [];
-			for(let movie of movies) {
-				let { name } = movie;
+			for(let name of Object.keys(movies)) {
 				name = name.split(" ").join("%20");
-				let {Title, Year, Poster, Runtime, imdbRating, Response} = await Helper.getData(`/?t=${name}`);
+				let {Title, Year, Poster, Runtime, imdbRating, Response} = await Helper.getData(`/?apikey=${apikey}&t=${name}`);
 				apiData.push({Title, Year, Poster, Runtime, Rating: imdbRating, Response});
 			}
 			resolve(apiData.filter(({Response}) => Response === "True"));
@@ -128,14 +127,14 @@ async function apiMovies(movies) {
 }
 
 /* Gets shows data from api */
-async function apiShows(shows) {
+async function apiShows(shows, apikey) {
 	try {
 		return new Promise(async resolve => {
 			let [apiData, posters] = [[], []];
 			for(let showName of Object.keys(shows)) {
 				let {season} = shows[showName];
 				showName = showName.replace(/[^\w\s]/gi, "").split(" ").join("%20"); //For api
-				let baseUrl = `/?t=${showName}`;
+				let baseUrl = `/?apikey=${apikey}&t=${showName}`;
 				let {Poster} = await Helper.getData(baseUrl);
 				posters.push({title: showName, url: Poster});
 				for(let item of season) { apiData.push(await Helper.getData(`${baseUrl}&Season=${item}`)); }
@@ -178,11 +177,11 @@ function removeDirs(files) {
 }
 
 /* Makes folder for shows and movies */
-function makeShowAndMoviesFolders({basePath, shows, posters, movies}) {
+function makeShowAndMoviesFolders({basePath, shows, posters, movies, moviesData}) {
 	return new Promise(async resolve => {
 		fs.mkdirSync(basePath);
 		["Tv Shows", "Movies", "No Match Found"].map(str => fs.mkdirSync(`${basePath}/${str}`)); //Initial Folders
-		await Promise.all([makeShowsFolders({shows, basePath, posters}), makeMoviesFolders(movies, basePath)]);
+		await Promise.all([makeShowsFolders({shows, basePath, posters}), makeMoviesFolders(movies, basePath, moviesData)]);
 		resolve();
 	}).catch(e => console.log("Make Show Folders " + new Error(e)));
 
@@ -201,19 +200,21 @@ function makeShowsFolders({shows, posters, basePath}) {
 }
 
 /* Makes folder for the movies with name, year, rating and runtime */
-function makeMoviesFolders(movies, basePath) {
+function makeMoviesFolders(movies, basePath, moviesData) {
 	return new Promise(async resolve => {
-		for(let name of Object.keys(movies)) {
-			if (!movies.hasOwnProperty("Title")) { //If apikey is not provided
-				fs.mkdirSync(`${basePath}/Movies/${name}`);
-				continue;
+		if(moviesData.length) { //If api key is provided
+			for(let movie of moviesData) {
+				let keys = Object.keys(movie);
+				keys.forEach(item => item !== "Poster" ? movie[item] = movie[item].replace(/[\|><\*:\?\"/\/]/g, "") : "");
+				let {Title, Rating, Poster, Runtime, Year} = movie;
+				let folder = `${Title} ${Year} (${Runtime}) (${Rating})`;
+				fs.mkdirSync(`${basePath}/Movies/${folder}`);
+				if(Poster !== "N/A") await Helper.saveImage(Poster, `${basePath}/Movies/${folder}/${Title}.jpg`);
 			}
-			let keys = Object.keys(name);
-			keys.forEach(item => item !== "Poster" ? name[item] = name[item].replace(/[\|><\*:\?\"/\/]/g, "") : "");
-			let {Title, Rating, Poster, Runtime, Year} = name;
-			let folder = `${Title} ${Year} (${Runtime}) (${Rating})`;
-			fs.mkdirSync(`${basePath}/Movies/${folder}`);
-			if(Poster !== "N/A") await Helper.saveImage(Poster, `${basePath}/Movies/${folder}/${Title}.jpg`);
+		} else {
+			for(let name of Object.keys(movies)) {
+				fs.mkdirSync(`${basePath}/Movies/${name}`);
+			}
 		}
 		resolve();
 	}).catch(e => console.log("makeMoviesFolders " + new Error(e)));
