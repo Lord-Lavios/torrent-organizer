@@ -34,9 +34,10 @@ const GetFiles = GetFilesFuncs(Helper);
 		basePath += Helper.generateRandomFolderName();
 		await makeShowAndMoviesFolders({basePath, shows, posters, "movies": moviesData.length ? moviesData : movies});
 		console.log("Finding new names for movies and tv shows");
-		let newNames = findNewNamesForFiles({video, shows, showsData, movies, moviesData});
+		let newNames = findNewNamesForFiles({shows, showsData, movies, moviesData});
 		if(args.mode === 0) {
 			console.log("Creating Hardlinks");
+			console.log(newNames);
 			newNames.map(({oldFile, newFile}) => fs.link(oldFile, basePath + newFile, err => err ? console.log(err): ""));
 		} else if(args.mode === 1) {
 			console.log("Creating Symlinks");
@@ -53,9 +54,9 @@ const GetFiles = GetFilesFuncs(Helper);
 	} catch(e) { console.log("Organize " + new Error(e)); }
 })();
 
-function findNewNamesForFiles({video, shows, showsData, movies, moviesData}) {
+function findNewNamesForFiles({shows, showsData, movies, moviesData}) {
 	let names = [];
-	video.map(({file, name}) => file.type === "movie" ? names.push(findNewNameForMovie({file, name, moviesData, movies})) : "");
+	Object.keys(movies).map(name => names.push(findNewNameForMovie({name, "file": movies[name], moviesData})));
 	Object.keys(shows).map(name => names = [...names, ...findNewNameForShow({name, files: shows[name].files, showsData})]);
 	return names.filter(({newFile}) => newFile); //No API Match but pattern match
 }
@@ -76,20 +77,16 @@ function findNewNameForShow({name, files, showsData}) {
 	return newFiles;
 }
 
-function findNewNameForMovie({file, name, moviesData, movies}) {
+function findNewNameForMovie({file, name, moviesData}) {
 	let newFile = {oldFile: file};
 	let ext = Helper.getExt(file);
 	if(ext === ".srt") fixSubs(file);
-	if(!moviesData.length) {
-		movies.forEach(movie => newFile["newFile"] = `/Movies/${movie}`);
-	} else {
-		moviesData.map(item => {
-			if(name.toLowerCase() !== item.Title.toLowerCase()) return;
-			let {Title, Year, Runtime, Rating} = item;
-			newFile["newFile"] = `/Movies/${Title} ${Year} (${Runtime}) (${Rating})/${Title} ${Year}${ext}`;
-		});
-	}
-	
+	if(!moviesData.length) { newFile["newFile"] = `/Movies/${name}/${name}${ext}`; return newFile; }
+	moviesData.map(item => {
+		if(name.toLowerCase() !== item.Title.toLowerCase()) return;
+		let {Title, Year, Runtime, Rating} = item;
+		newFile["newFile"] = `/Movies/${Title} ${Year} (${Runtime}) (${Rating})/${Title} ${Year}${ext}`;
+	});
 	return newFile;
 }
 
@@ -119,8 +116,9 @@ async function apiMovies(movies) {
 		return new Promise(async resolve => {
 			let apiData = [];
 			for(let movie of movies) {
-				movie = movie.split(" ").join("%20");
-				let {Title, Year, Poster, Runtime, imdbRating, Response} = await Helper.getData(`/?t=${movie}`);
+				let { name } = movie;
+				name = name.split(" ").join("%20");
+				let {Title, Year, Poster, Runtime, imdbRating, Response} = await Helper.getData(`/?t=${name}`);
 				apiData.push({Title, Year, Poster, Runtime, Rating: imdbRating, Response});
 			}
 			resolve(apiData.filter(({Response}) => Response === "True"));
@@ -149,10 +147,14 @@ async function apiShows(shows) {
 
 /* Gets show names with their respective season numbers */
 function filterShowsAndMovies(video) {
-	let [shows, movies] = [{}, []];
+	let [shows, movies] = [{}, {}];
 	video.map(({file, type, fileStats, name}) => {
 		if(name) name = name.replace(/\(\s*[^)]*\)/g, "").replace(/\[\s*[^\]]*\]/g, "").replace(/\/\\/g, "").trim(); //Removes brackets and extra whitespace
-		if(type === "movie") return movies.length ? movies.indexOf(name) === -1 ? movies.push(name) : "" : movies.push(name);
+		if(type === "movie") {
+			if(!name) return;
+			name = Helper.capitalize(name);
+			return movies[name] ? "" : movies[name] = file; 
+		}
 		{
 			let {name, season, episodeNum} = fileStats;
 			if(!name) return;
@@ -183,8 +185,8 @@ function makeShowAndMoviesFolders({basePath, shows, posters, movies}) {
 		await Promise.all([makeShowsFolders({shows, basePath, posters}), makeMoviesFolders(movies, basePath)]);
 		resolve();
 	}).catch(e => console.log("Make Show Folders " + new Error(e)));
-}
 
+}
 /* Makes folder for the shows with; Season and showName */
 function makeShowsFolders({shows, posters, basePath}) {
 	return new Promise(async resolve => {
@@ -201,18 +203,17 @@ function makeShowsFolders({shows, posters, basePath}) {
 /* Makes folder for the movies with name, year, rating and runtime */
 function makeMoviesFolders(movies, basePath) {
 	return new Promise(async resolve => {
-		if(movies instanceof Array) { //API key not provided
-			movies.forEach(movie => fs.mkdirSync(`${basePath}/Movies/${movie}`));
-		} else {
-			for(let movie of movies) {
-				let keys = Object.keys(movie);
-				keys.splice(2, 1); //Remove Poster
-				keys.forEach(item => movie[item] = movie[item].replace(/[\|><\*:\?\"/\/]/g, ""));
-				let {Title, Rating, Poster, Runtime, Year} = movie;
-				let folder = `${Title} ${Year} (${Runtime}) (${Rating})`;
-				fs.mkdirSync(`${basePath}/Movies/${folder}`);
-				if(Poster !== "N/A") await Helper.saveImage(Poster, `${basePath}/Movies/${folder}/${Title}.jpg`);
+		for(let name of Object.keys(movies)) {
+			if (!movies.hasOwnProperty("Title")) { //If apikey is not provided
+				fs.mkdirSync(`${basePath}/Movies/${name}`);
+				continue;
 			}
+			let keys = Object.keys(name);
+			keys.forEach(item => item !== "Poster" ? name[item] = name[item].replace(/[\|><\*:\?\"/\/]/g, "") : "");
+			let {Title, Rating, Poster, Runtime, Year} = name;
+			let folder = `${Title} ${Year} (${Runtime}) (${Rating})`;
+			fs.mkdirSync(`${basePath}/Movies/${folder}`);
+			if(Poster !== "N/A") await Helper.saveImage(Poster, `${basePath}/Movies/${folder}/${Title}.jpg`);
 		}
 		resolve();
 	}).catch(e => console.log("makeMoviesFolders " + new Error(e)));
