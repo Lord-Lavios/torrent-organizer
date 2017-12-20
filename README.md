@@ -16,9 +16,9 @@ This script makes it look like this
 **Note (only when the mode is `nolink`)** - It will delete all the files that are not `.mp4, .avi, .mkv, .avi and .srt`. This is to make sure that the script deletes all the unnecessary `.txt`, `.nfo`, folders remaining after the rename and sample video files. Best to use this script on a folder which only contains movies and tv shows.
 
 ## How to use
-- Install node
+- Install [NodeJs](https://nodejs.org/en/)
 - Download and Extract organize.7z (Check Releases)
-- (Optional) Request key from [OMDb API](http://omdbapi.com/apikey.aspx) to organize files with titles and posters. If key is not provided, the script will organize files without titles and posters. Support OMDb API on [Patreon](https://www.patreon.com/bePatron?u=5038490).
+- (Optional) Request key from [OMDb API](http://omdbapi.com/apikey.aspx) to organize files with titles and posters. If the key is not provided, the script will organize files without titles and posters. Support OMDb API on [Patreon](https://www.patreon.com/bePatron?u=5038490).
 
 ### Usage
 `node organize <path> --api=<apikey|false> --mode=<mode>`
