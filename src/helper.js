@@ -77,13 +77,15 @@ export default function () {
 					method: "GET",
 					headers: {"Content-Type": "application/json"}
 				};
-				https.request(options).on("response", res => {
-					let output = "";
-					res.setEncoding("utf8");
-					res.on("data", chunk => output += chunk);
-					res.on("end", () => resolve(JSON.parse(output)) );
-					res.on("error", e => console.error(e));
-				}).end();
+				setTimeout(() => {
+					https.request(options).on("response", res => {
+						let output = "";
+						res.setEncoding("utf8");
+						res.on("data", chunk => output += chunk);
+						res.on("end", () => resolve(JSON.parse(output)) );
+						res.on("error", e => console.error(e));
+					}).end();
+				}, 100);
 			}).catch(e => console.log("getData " + new Error(e)));
 		}
 
@@ -101,10 +103,11 @@ export default function () {
 			let title = "";
 			if (!showsData.length) return null;
 			showsData.forEach(show => {
-				if(name !== show.Title || show.Season !== season) return;
-				show.Episodes.forEach(({Episode, Title}) => episodeNum === Episode ? title = Title : "");
+				let titlePatt = new RegExp(name, "i");
+				if(!titlePatt.test(show.Title) || parseInt(show.Season, 10) !== parseInt(season, 10)) return;
+				show.Episodes.forEach(({Episode, Title}) => parseInt(episodeNum, 10) === parseInt(Episode, 10) ? title = Title : "");
 			});
-			return title ? title.replace(/[^\w\s-\.$]/gi, "") : null; //Repalace is for weird titles like - Horseback Riding\Man Zone
+			return title ? title.replace(/[^\w\s-\.$]/gi, "") : null; //Replace is for weird titles like - Horseback Riding\Man Zone
 		}
 
 		/* Outputs season, Show name and episode number*/

@@ -37,7 +37,6 @@ const GetFiles = GetFilesFuncs(Helper);
 		let newNames = findNewNamesForFiles({shows, showsData, movies, moviesData});
 		if(args.mode === 0) {
 			console.log("Creating Hardlinks");
-			console.log(newNames);
 			newNames.map(({oldFile, newFile}) => fs.link(oldFile, basePath + newFile, err => err ? console.log(err): ""));
 		} else if(args.mode === 1) {
 			console.log("Creating Symlinks");
@@ -82,9 +81,9 @@ function findNewNameForMovie({file, name, moviesData}) {
 	let ext = Helper.getExt(file);
 	if(ext === ".srt") fixSubs(file);
 	if(!moviesData.length) { newFile["newFile"] = `/Movies/${name}/${name}${ext}`; return newFile; }
-	moviesData.map(item => {
-		if(name.toLowerCase() !== item.Title.toLowerCase()) return;
-		let {Title, Year, Runtime, Rating} = item;
+	moviesData.map(({Title, Year, Runtime, Rating}) => {
+		let isNameAMatch = new RegExp(name, "i");
+		if(!isNameAMatch.test(Title)) return;
 		newFile["newFile"] = `/Movies/${Title} ${Year} (${Runtime}) (${Rating})/${Title} ${Year}${ext}`;
 	});
 	return newFile;
