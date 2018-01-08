@@ -13,11 +13,6 @@ module.exports = {
 		"Promise": true
 	},
 	"rules": {
-		"indent": [
-			"error",
-			"tab",
-			{"SwitchCase": 1}
-		],
 		"linebreak-style": [
 			"off",
 			"windows"
