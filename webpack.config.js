@@ -1,7 +1,8 @@
+require("webpack");
+
 const path = require("path");
 const dev = path.resolve(__dirname, "src");
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-const webpack = require("webpack");
 const isProd = process.env.NODE_ENV.trim() === "production";
 
 module.exports = {
@@ -14,7 +15,9 @@ module.exports = {
 		rules: [
 			{
 				test: /\.js$/,
-				use: "babel-loader",
+				use: {
+					loader: "babel-loader"
+				},
 				exclude: /node_modules/
 			}
 		]

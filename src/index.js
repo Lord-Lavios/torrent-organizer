@@ -103,53 +103,45 @@ async function whatToDoWithFile(file, basePath) {
     return new Promise(resolve => fs.rename(file, `${basePath}/No Match Found/${fileName}`, () => resolve()));
 }
 
-
 /* Gets shows data through OmdbAPI with their poster url's */
-function apiShowsAndMovies(shows, movies, apikey) {
+async function apiShowsAndMovies(shows, movies, apikey) {
     try {
-        return new Promise(async resolve => {
-            let [showsData, posters] = await apiShows(shows, apikey);
-            let moviesData = await apiMovies(movies, apikey);
-            resolve([showsData, posters, moviesData]);
-        });
+        let [showsData, posters] = await apiShows(shows, apikey);
+        let moviesData = await apiMovies(movies, apikey);
+        return [showsData, posters, moviesData];
     } catch(e) { console.log("Execute API " + new Error(e)); }
 }
 
 /* Gets movies Data form api */
 async function apiMovies(movies, apikey) {
     try {
-        return new Promise(async resolve => {
-            let apiData = [];
-            for(let name of Object.keys(movies)) {
-                name = name.split(" ").join("%20");
-                let { Title, Year, Poster, Runtime, imdbRating, Response } = 
-                    await Helper.getData(`/?apikey=${apikey}&t=${name}`);
-                apiData.push({Title, Year, Poster, Runtime, Rating: imdbRating, Response});
-            }
-            resolve(apiData.filter(({Response}) => Response === "True"));
-        });
+        let apiData = [];
+        for(let name of Object.keys(movies)) {
+            name = name.split(" ").join("%20");
+            let { Title, Year, Poster, Runtime, imdbRating, Response } = 
+                await Helper.getData(`/?apikey=${apikey}&t=${name}`);
+            apiData.push({Title, Year, Poster, Runtime, Rating: imdbRating, Response});
+        }
+        return apiData.filter(({Response}) => Response === "True");
     } catch(e) { console.log("apiMovies "); console.log(new Error(e)); }
-
 }
 
 /* Gets shows data from api */
 async function apiShows(shows, apikey) {
     try {
-        return new Promise(async resolve => {
-            let [apiData, posters] = [[], []];
-            for(let showName of Object.keys(shows)) {
-                let {season} = shows[showName];
-                showName = showName.replace(/[^\w\s]/gi, "").split(" ").join("%20"); //For api
-                let baseUrl = `/?apikey=${apikey}&t=${showName}`;
-                let {Poster} = await Helper.getData(baseUrl);
-                posters.push({title: showName, url: Poster});
-                for(let item of season) { apiData.push(await Helper.getData(`${baseUrl}&Season=${item}`)); }
-            }
-            resolve([
-                apiData.filter(({Response}) => Response === "True"), 
-                posters.filter(({url, title}) => url && title)
-            ]);
-        });
+        let [apiData, posters] = [[], []];
+        for(let showName of Object.keys(shows)) {
+            let {season} = shows[showName];
+            showName = showName.replace(/[^\w\s]/gi, "").split(" ").join("%20"); //For api
+            let baseUrl = `/?apikey=${apikey}&t=${showName}`;
+            let {Poster} = await Helper.getData(baseUrl);
+            posters.push({title: showName, url: Poster});
+            for(let item of season) { apiData.push(await Helper.getData(`${baseUrl}&Season=${item}`)); }
+        }
+        return [
+            apiData.filter(({Response}) => Response === "True"), 
+            posters.filter(({url, title}) => url && title)
+        ];
     } catch(e) { console.log("apiMovies "); console.log(new Error(e)); }
 }
 
@@ -190,39 +182,36 @@ function removeDirs(files) {
 }
 
 /* Makes folder for shows and movies */
-function makeShowAndMoviesFolders({basePath, shows, posters, movies, moviesData}) {
-    return new Promise(async resolve => {
+async function makeShowAndMoviesFolders({basePath, shows, posters, movies, moviesData}) {
+   try {
         fs.mkdirSync(basePath);
         ["Tv Shows", "Movies", "No Match Found"].map(str => fs.mkdirSync(`${basePath}/${str}`)); //Initial Folders
         await Promise.all([
             makeShowsFolders({shows, basePath, posters}), 
             makeMoviesFolders(movies, basePath, moviesData)
         ]);
-        resolve();
-    }).catch(e => console.log("Make Show Folders " + new Error(e)));
-
+    } catch(e) { console.log("Make Show Folders " + new Error(e)); }
 }
 /* Makes folder for the shows with; Season and showName */
-function makeShowsFolders({shows, posters, basePath}) {
-    return new Promise(async resolve => {
+async function makeShowsFolders({shows, posters, basePath}) {
+    try {
         for(let showName of Object.keys(shows)) {
             let {season} = shows[showName];
             fs.mkdirSync(`${basePath}/Tv Shows/${showName}`);
             if (posters.length) await savePosters({basePath, showName, posters}); //API key is provided
             season.map(season => fs.mkdirSync(`${basePath}/Tv Shows/${showName}/Season ${season}`));
         }
-        resolve();
-    }).catch(e => console.log("makeShowsFolders " + new Error(e)));
+    } catch(e) { console.log("makeShowsFolders " + new Error(e)); }
 }
 
 /* Makes folder for the movies with name, year, rating and runtime */
-function makeMoviesFolders(movies, basePath, moviesData) {
-    return new Promise(async resolve => {
+async function makeMoviesFolders(movies, basePath, moviesData) {
+    try {
         if(moviesData.length) { //If api key is provided
             for(let movie of moviesData) {
                 let keys = Object.keys(movie);
                 keys.forEach(item => 
-                    item !== "Poster" ? movie[item] = movie[item].replace(/[\|><\*:\?\"/\/]/g, "") : "");
+                    item !== "Poster" ? movie[item] = movie[item].replace(/[|><*:?"//]/g, "") : "");
                 let {Title, Rating, Poster, Runtime, Year} = movie;
                 let folder = `${Title} ${Year} (${Runtime}) (${Rating})`;
                 fs.mkdirSync(`${basePath}/Movies/${folder}`);
@@ -233,8 +222,7 @@ function makeMoviesFolders(movies, basePath, moviesData) {
                 fs.mkdirSync(`${basePath}/Movies/${name}`);
             }
         }
-        resolve();
-    }).catch(e => console.log("makeMoviesFolders " + new Error(e)));
+    } catch(e) { console.log("makeMoviesFolders " + new Error(e)); }
 }
 
 /* Downloads and save posters */
